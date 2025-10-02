@@ -308,7 +308,7 @@ helm install smtp-gateway deployment/helm/smtp-gateway \
   --values deployment/helm/smtp-gateway/values-prod.yaml
 ```
 
-For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
+For detailed deployment instructions, see [docs/deployment/DEPLOYMENT_GUIDE.md](docs/deployment/DEPLOYMENT_GUIDE.md).
 
 ## Configuration
 
