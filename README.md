@@ -248,6 +248,29 @@ $mail->send();
 
 ## Deployment
 
+### Quick Local Testing (k3d)
+
+For quick local testing with k3d Kubernetes cluster:
+
+```bash
+# Make sure Docker Desktop is running, then:
+./deploy-local.sh
+```
+
+This script will:
+1. Create/start k3d cluster
+2. Build Docker image
+3. Deploy with Helm
+4. Verify health endpoints
+
+Then access SMTP gateway:
+```bash
+# Port forward SMTP
+kubectl port-forward -n smtp-gateway svc/smtp-gateway 587:587
+
+# Test with your email client on localhost:587
+```
+
 ### Docker
 
 Build and run the Docker image:
@@ -285,7 +308,7 @@ helm install smtp-gateway deployment/helm/smtp-gateway \
   --values deployment/helm/smtp-gateway/values-prod.yaml
 ```
 
-For detailed deployment instructions, see [docs/deployment-guide.md](docs/deployment-guide.md).
+For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
 
 ## Configuration
 
