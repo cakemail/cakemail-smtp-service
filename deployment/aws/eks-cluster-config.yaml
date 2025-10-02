@@ -1,0 +1,72 @@
+---
+# EKS Cluster Configuration for SMTP Gateway
+# Production-ready setup with 2 node groups
+
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: smtp-gateway-prod
+  region: us-east-1
+  version: "1.28"
+  tags:
+    Environment: production
+    Project: smtp-gateway
+    ManagedBy: eksctl
+
+# VPC Configuration
+vpc:
+  cidr: 10.0.0.0/16
+  nat:
+    gateway: Single  # Use single NAT gateway to reduce costs (for testing)
+
+# IAM Configuration
+iam:
+  withOIDC: true  # Enable OIDC for service accounts
+
+# Managed Node Groups
+managedNodeGroups:
+  # Primary node group for SMTP Gateway pods
+  - name: smtp-gateway-nodes
+    instanceType: t3.medium
+    minSize: 2
+    maxSize: 6
+    desiredCapacity: 2
+    volumeSize: 50
+    volumeType: gp3
+    privateNetworking: true
+    labels:
+      role: smtp-gateway
+      environment: production
+    tags:
+      Name: smtp-gateway-node
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/smtp-gateway-prod: "owned"
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+        ebs: true
+        efs: true
+        albIngress: true
+        cloudWatch: true
+
+# CloudWatch Logging
+cloudWatch:
+  clusterLogging:
+    enableTypes:
+      - api
+      - audit
+      - authenticator
+      - controllerManager
+      - scheduler
+
+# Addons
+addons:
+  - name: vpc-cni
+    version: latest
+  - name: coredns
+    version: latest
+  - name: kube-proxy
+    version: latest
+  - name: aws-ebs-csi-driver
+    version: latest
