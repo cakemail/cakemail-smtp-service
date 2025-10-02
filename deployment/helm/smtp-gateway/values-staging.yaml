@@ -1,0 +1,33 @@
+# Staging values for smtp-gateway
+
+replicaCount: 2
+
+image:
+  repository: registry.cakemail.com/smtp-gateway
+  pullPolicy: Always
+  tag: "develop"
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+
+config:
+  cakemailApiUrl: "https://api.staging.cakemail.com/v1"
+  cakemailAuthUrl: "https://api.staging.cakemail.com/v1/auth"
+  logLevel: "DEBUG"
+
+tls:
+  enabled: true
+  secretName: "smtp-gateway-tls-staging"
+
+serviceMonitor:
+  enabled: true

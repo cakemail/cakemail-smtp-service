@@ -1,0 +1,41 @@
+# Production values for smtp-gateway
+
+replicaCount: 4
+
+image:
+  repository: registry.cakemail.com/smtp-gateway
+  pullPolicy: Always
+  tag: "stable"
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 4
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 75
+
+config:
+  cakemailApiUrl: "https://api.cakemail.com/v1"
+  cakemailAuthUrl: "https://api.cakemail.com/v1/auth"
+  logLevel: "INFO"
+  rateLimitPerIp: 200
+  maxConnectionsPerPod: 2000
+
+tls:
+  enabled: true
+  secretName: "smtp-gateway-tls-prod"
+
+networkPolicy:
+  enabled: true
+
+serviceMonitor:
+  enabled: true
+  interval: 15s

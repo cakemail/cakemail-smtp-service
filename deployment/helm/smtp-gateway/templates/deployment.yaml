@@ -1,0 +1,125 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "smtp-gateway.fullname" . }}
+  labels:
+    {{- include "smtp-gateway.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "smtp-gateway.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "smtp-gateway.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "smtp-gateway.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: {{ .Chart.Name }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: smtp
+          containerPort: {{ .Values.config.smtpPort }}
+          protocol: TCP
+        - name: http
+          containerPort: {{ .Values.config.httpPort }}
+          protocol: TCP
+        livenessProbe:
+          {{- toYaml .Values.livenessProbe | nindent 12 }}
+        readinessProbe:
+          {{- toYaml .Values.readinessProbe | nindent 12 }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        env:
+        - name: CAKEMAIL_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "smtp-gateway.fullname" . }}-config
+              key: cakemail-api-url
+        - name: CAKEMAIL_AUTH_URL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "smtp-gateway.fullname" . }}-config
+              key: cakemail-auth-url
+        - name: SMTP_HOST
+          value: {{ .Values.config.smtpHost | quote }}
+        - name: SMTP_PORT
+          value: {{ .Values.config.smtpPort | quote }}
+        - name: SMTP_HOSTNAME
+          value: {{ .Values.config.smtpHostname | quote }}
+        - name: HTTP_HOST
+          value: {{ .Values.config.httpHost | quote }}
+        - name: HTTP_PORT
+          value: {{ .Values.config.httpPort | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.config.logLevel | quote }}
+        - name: LOG_FORMAT
+          value: {{ .Values.config.logFormat | quote }}
+        - name: RATE_LIMIT_PER_IP
+          value: {{ .Values.config.rateLimitPerIp | quote }}
+        - name: MAX_CONNECTIONS_PER_POD
+          value: {{ .Values.config.maxConnectionsPerPod | quote }}
+        - name: MAX_CONNECTIONS_PER_IP
+          value: {{ .Values.config.maxConnectionsPerIp | quote }}
+        - name: CONNECTION_TIMEOUT
+          value: {{ .Values.config.connectionTimeout | quote }}
+        - name: MESSAGE_SIZE_LIMIT
+          value: {{ .Values.config.messageSizeLimit | quote }}
+        - name: MAX_RECIPIENTS
+          value: {{ .Values.config.maxRecipients | quote }}
+        - name: API_TIMEOUT
+          value: {{ .Values.config.apiTimeout | quote }}
+        - name: API_CONNECTION_POOL_SIZE
+          value: {{ .Values.config.apiConnectionPoolSize | quote }}
+        - name: API_MAX_RETRIES
+          value: {{ .Values.config.apiMaxRetries | quote }}
+        - name: AUTH_CACHE_TTL
+          value: {{ .Values.config.authCacheTtl | quote }}
+        - name: CIRCUIT_BREAKER_THRESHOLD
+          value: {{ .Values.config.circuitBreakerThreshold | quote }}
+        - name: CIRCUIT_BREAKER_TIMEOUT
+          value: {{ .Values.config.circuitBreakerTimeout | quote }}
+        - name: TLS_CERT_PATH
+          value: {{ .Values.tls.certPath | quote }}
+        - name: TLS_KEY_PATH
+          value: {{ .Values.tls.keyPath | quote }}
+        {{- if .Values.tls.enabled }}
+        volumeMounts:
+        - name: tls
+          mountPath: /etc/smtp-gateway/tls
+          readOnly: true
+        {{- end }}
+      {{- if .Values.tls.enabled }}
+      volumes:
+      - name: tls
+        secret:
+          secretName: {{ .Values.tls.secretName }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

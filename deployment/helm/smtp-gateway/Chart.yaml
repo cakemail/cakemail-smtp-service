@@ -1,0 +1,17 @@
+apiVersion: v2
+name: smtp-gateway
+description: Cakemail SMTP Gateway - High-performance SMTP to API bridge
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - smtp
+  - email
+  - gateway
+  - cakemail
+home: https://github.com/cakemail/smtp-gateway
+sources:
+  - https://github.com/cakemail/smtp-gateway
+maintainers:
+  - name: Cakemail Team
+    email: devops@cakemail.com

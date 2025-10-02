@@ -1,0 +1,138 @@
+# Default values for smtp-gateway
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 2
+
+image:
+  repository: smtp-gateway
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  allowPrivilegeEscalation: false
+
+service:
+  smtp:
+    type: LoadBalancer
+    port: 587
+    targetPort: 587
+    annotations: {}
+  http:
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 75
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - smtp-gateway
+          topologyKey: kubernetes.io/hostname
+
+config:
+  cakemailApiUrl: "https://api.cakemail.com/v1"
+  cakemailAuthUrl: "https://api.cakemail.com/v1/auth"
+  smtpHost: "0.0.0.0"
+  smtpPort: 587
+  smtpHostname: "smtp.cakemail.com"
+  httpHost: "0.0.0.0"
+  httpPort: 8080
+  logLevel: "INFO"
+  logFormat: "json"
+  rateLimitPerIp: 100
+  maxConnectionsPerPod: 1000
+  maxConnectionsPerIp: 10
+  connectionTimeout: 300
+  messageSizeLimit: 26214400
+  maxRecipients: 100
+  apiTimeout: 10.0
+  apiConnectionPoolSize: 100
+  apiMaxRetries: 2
+  authCacheTtl: 900
+  circuitBreakerThreshold: 5
+  circuitBreakerTimeout: 60
+
+tls:
+  enabled: true
+  certPath: "/etc/smtp-gateway/tls/tls.crt"
+  keyPath: "/etc/smtp-gateway/tls/tls.key"
+  secretName: "smtp-gateway-tls"
+
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 50%
+
+networkPolicy:
+  enabled: false
+
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s

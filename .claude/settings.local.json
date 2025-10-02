@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(awk '{print substr(\"\"\"\"                                        \"\"\"\", 1, (length($0)-length(gensub(/\\/.*/, \"\"\"\"\"\"\"\", 1, $0)))*2) $0}')",
+      "Bash(python3 -m pip:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: smtp-gateway-tls
+  namespace: smtp-gateway
+spec:
+  secretName: smtp-gateway-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - smtp.cakemail.com
+  duration: 2160h  # 90 days
+  renewBefore: 720h  # 30 days before expiry

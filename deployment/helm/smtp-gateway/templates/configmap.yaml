@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "smtp-gateway.fullname" . }}-config
+  labels:
+    {{- include "smtp-gateway.labels" . | nindent 4 }}
+data:
+  cakemail-api-url: {{ .Values.config.cakemailApiUrl | quote }}
+  cakemail-auth-url: {{ .Values.config.cakemailAuthUrl | quote }}
