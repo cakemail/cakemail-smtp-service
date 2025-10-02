@@ -1,0 +1,63 @@
+---
+# EKS Staging Cluster Configuration for SMTP Gateway
+# Cost-optimized for testing and limited production use
+
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: smtp-gateway-staging
+  region: us-east-1
+  version: "1.28"
+  tags:
+    Environment: staging
+    Project: smtp-gateway
+    ManagedBy: eksctl
+    CostCenter: testing
+
+# VPC Configuration - Smaller CIDR, single NAT gateway
+vpc:
+  cidr: 10.1.0.0/16
+  nat:
+    gateway: Single  # Cost optimization: single NAT gateway
+
+# IAM Configuration
+iam:
+  withOIDC: true
+
+# Managed Node Group - Single small instance type
+managedNodeGroups:
+  - name: smtp-staging-nodes
+    instanceType: t3.small  # Smaller instance (2 vCPU, 2GB RAM)
+    minSize: 1              # Start with just 1 node
+    maxSize: 3              # Max 3 nodes for staging
+    desiredCapacity: 1
+    volumeSize: 20          # Smaller volume (20GB vs 50GB)
+    volumeType: gp3
+    privateNetworking: true
+    labels:
+      role: smtp-gateway
+      environment: staging
+    tags:
+      Name: smtp-gateway-staging-node
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/smtp-gateway-staging: "owned"
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+        ebs: true
+        cloudWatch: true
+
+# CloudWatch Logging - Minimal for cost savings
+cloudWatch:
+  clusterLogging:
+    enableTypes:
+      - api
+      - audit
+    # Disabled: authenticator, controllerManager, scheduler
+
+# Essential addons only
+addons:
+  - name: vpc-cni
+  - name: coredns
+  - name: kube-proxy
